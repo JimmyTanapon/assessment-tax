@@ -25,7 +25,7 @@ func floatPtr(f float64) *float64 {
 	return &f
 }
 
-func TaxHanler(c echo.Context) error {
+func TaxHandler(c echo.Context) error {
 	var incomeDetails IncomeDetails
 	if err := c.Bind(&incomeDetails); err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})

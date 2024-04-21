@@ -7,6 +7,6 @@ import (
 
 func main() {
 	e := echo.New()
-	e.POST("/tax/calculations", tax.TaxHanler)
+	e.POST("/tax/calculations", tax.TaxHandler)
 	e.Logger.Fatal(e.Start(":8080"))
 }
