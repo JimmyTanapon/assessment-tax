@@ -1,14 +1,12 @@
 package main
 
 import (
+	"github.com/JimmyTanapon/assessment-tax/tax"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 func main() {
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, Go Bootcamp!")
-	})
-	e.Logger.Fatal(e.Start(":1323"))
+	e.POST("/tax/calculations", tax.TaxHanler)
+	e.Logger.Fatal(e.Start(":8080"))
 }
