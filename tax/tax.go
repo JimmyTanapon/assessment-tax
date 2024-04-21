@@ -20,17 +20,20 @@ type TaxBracket struct {
 	Description string   `json:"description"`
 }
 
-func (tb TaxBracket) CalculateTax(income float64) float64 {
+func (tb TaxBracket) CalculateTaxRate(income float64, prvlevel float64) float64 {
+	log.Println(prvlevel, income)
 
-	if income <= tb.MinIncome || tb.MaxIncome == nil {
+	if income <= prvlevel || tb.MaxIncome == nil {
 		return 0
 	}
 
 	if income > *tb.MaxIncome {
-		log.Printf("Max incoome %f - MinIncome %f  * TaxRate %f ", *tb.MaxIncome, tb.MinIncome, tb.TaxRate/100)
-		return (*tb.MaxIncome - tb.MinIncome) * (tb.TaxRate)
+		log.Printf("Max incoome %f - MinIncome %f  * TaxRate %f ", *tb.MaxIncome, prvlevel, tb.TaxRate/100)
+		return (*tb.MaxIncome - prvlevel) * (tb.TaxRate)
 	}
-	return (income - tb.MinIncome + 1) * (tb.TaxRate)
+	// log.Printf(" income %f - MinIncome %f  * TaxRate %f ", income, tb.MinIncome-1, tb.TaxRate)
+
+	return (income - prvlevel) * (tb.TaxRate)
 }
 
 // func TexResponse(taxs []TaxBracket) {
