@@ -1,6 +1,7 @@
 package tax
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -39,10 +40,11 @@ func calculateTax(income float64) float64 {
 
 	taxReduction := 60000.0
 	var taxAmount float64
-
-	// Calculate taxable income after deduction
+	taxLevelindex := 0
 	taxableIncome := income - taxReduction
+	maxIncomLevel := *TaxLevel[len(TaxLevel)-1].MaxIncome
 	for index, tax := range TaxLevel {
+
 		if index > len(TaxLevel) {
 			continue
 		}
@@ -50,8 +52,13 @@ func calculateTax(income float64) float64 {
 		if adjustindex < 0 {
 			adjustindex = 0
 		}
-		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome)
+		if taxableIncome < *TaxLevel[adjustindex].MaxIncome {
+			continue
+		}
+		taxLevelindex += 1
+		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel)
 	}
+	log.Println("taxlevle", taxLevelindex)
 
 	return taxAmount
 }

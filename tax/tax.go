@@ -1,7 +1,5 @@
 package tax
 
-import "log"
-
 type Allowance struct {
 	AllowanceType string  `json:"allowanceType"`
 	Amount        float64 `json:"amount"`
@@ -20,24 +18,13 @@ type TaxBracket struct {
 	Description string   `json:"description"`
 }
 
-func (tb TaxBracket) CalculateTaxRate(income float64, prvlevel float64) float64 {
-	log.Println(prvlevel, income)
+func (tb TaxBracket) CalculateTaxRate(income float64, prvlevel float64, maxlevel float64) float64 {
 
 	if income <= prvlevel || tb.MaxIncome == nil {
 		return 0
 	}
-
-	if income > *tb.MaxIncome {
-		log.Printf("Max incoome %f - MinIncome %f  * TaxRate %f ", *tb.MaxIncome, prvlevel, tb.TaxRate/100)
+	if income > *tb.MaxIncome && income < maxlevel {
 		return (*tb.MaxIncome - prvlevel) * (tb.TaxRate)
 	}
-	// log.Printf(" income %f - MinIncome %f  * TaxRate %f ", income, tb.MinIncome-1, tb.TaxRate)
-
 	return (income - prvlevel) * (tb.TaxRate)
 }
-
-// func TexResponse(taxs []TaxBracket) {
-// 	for _, tax := range taxs {
-// 		fmt.Println(tax)
-// 	}
-// }
