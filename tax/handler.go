@@ -1,6 +1,7 @@
 package tax
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -18,14 +19,14 @@ var TaxLevel = []TaxBracket{
 	{MaxIncome: floatPtr(500000), TaxRate: 0.1, Description: "150,001-500,000"},
 	{MaxIncome: floatPtr(1000000), TaxRate: 0.15, Description: "500,001-1,000,000"},
 	{MaxIncome: floatPtr(2000000), TaxRate: 0.2, Description: "1,000,001-2,000,000"},
-	{MaxIncome: nil, TaxRate: 0.35, Description: "2,000,001 ขึ้นไป"},
+	{MaxIncome: floatPtr(2000001), TaxRate: 0.35, Description: "2,000,001 ขึ้นไป"},
 }
 
 func floatPtr(f float64) *float64 {
 	return &f
 }
 
-func TaxHanler(c echo.Context) error {
+func TaxHandler(c echo.Context) error {
 	var incomeDetails IncomeDetails
 	if err := c.Bind(&incomeDetails); err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
@@ -39,15 +40,25 @@ func calculateTax(income float64) float64 {
 
 	taxReduction := 60000.0
 	var taxAmount float64
-
-	// Calculate taxable income after deduction
+	taxLevelindex := 0
 	taxableIncome := income - taxReduction
+	maxIncomLevel := *TaxLevel[len(TaxLevel)-1].MaxIncome
 	for index, tax := range TaxLevel {
-		if index < 1 || index > len(TaxLevel) {
+
+		if index > len(TaxLevel) {
 			continue
 		}
-		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[index-1].MaxIncome)
+		adjustindex := index - 1
+		if adjustindex < 0 {
+			adjustindex = 0
+		}
+		if taxableIncome < *TaxLevel[adjustindex].MaxIncome {
+			continue
+		}
+		taxLevelindex += 1
+		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel)
 	}
+	log.Println("taxlevle", taxLevelindex)
 
 	return taxAmount
 }
