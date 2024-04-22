@@ -7,11 +7,22 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type Handler struct {
+	store Storer
+}
+
 type Err struct {
 	Message string `json:"message"`
 }
 type TaxResponse struct {
 	Tax float64 `json:"tax"`
+}
+type Storer interface {
+	Discounts() ([]TaxDiscount, error)
+}
+
+func New(db Storer) *Handler {
+	return &Handler{store: db}
 }
 
 var TaxLevel = []TaxBracket{
@@ -26,23 +37,24 @@ func floatPtr(f float64) *float64 {
 	return &f
 }
 
-func TaxHandler(c echo.Context) error {
+func (h *Handler) TaxHandler(c echo.Context) error {
 	var incomeDetails IncomeDetails
 	if err := c.Bind(&incomeDetails); err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
+	h.taxReduction()
 	taxAmount := calculateTax(incomeDetails.TotalIncome)
 	return c.JSON(http.StatusOK, TaxResponse{Tax: taxAmount})
 
 }
-
 func calculateTax(income float64) float64 {
 
 	taxReduction := 60000.0
+	taxableIncome := income - taxReduction
 	var taxAmount float64
 	taxLevelindex := 0
-	taxableIncome := income - taxReduction
 	maxIncomLevel := *TaxLevel[len(TaxLevel)-1].MaxIncome
+
 	for index, tax := range TaxLevel {
 
 		if index > len(TaxLevel) {
@@ -61,4 +73,12 @@ func calculateTax(income float64) float64 {
 	log.Println("taxlevle", taxLevelindex)
 
 	return taxAmount
+}
+func (h *Handler) taxReduction() {
+	discount, err := h.store.Discounts()
+	if err != nil {
+		log.Fatal("err!", err)
+	}
+	log.Println(discount)
+
 }

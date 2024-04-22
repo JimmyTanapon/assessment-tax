@@ -1,5 +1,15 @@
 package tax
 
+import "time"
+
+type TaxDiscount struct {
+	ID                 int       `json:"id"`
+	Discount_Type      string    `json:"discount_type"`
+	Discount_value     float64   `json:"discount_value"`
+	Min_discount_value float64   `json:"min_discount_value"`
+	Max_discount_value float64   `json:"max_discount_value"`
+	CreatedAt          time.Time `json:"created_at"`
+}
 type Allowance struct {
 	AllowanceType string  `json:"allowanceType"`
 	Amount        float64 `json:"amount"`
