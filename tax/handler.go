@@ -18,7 +18,7 @@ var TaxLevel = []TaxBracket{
 	{MaxIncome: floatPtr(500000), TaxRate: 0.1, Description: "150,001-500,000"},
 	{MaxIncome: floatPtr(1000000), TaxRate: 0.15, Description: "500,001-1,000,000"},
 	{MaxIncome: floatPtr(2000000), TaxRate: 0.2, Description: "1,000,001-2,000,000"},
-	{MaxIncome: nil, TaxRate: 0.35, Description: "2,000,001 ขึ้นไป"},
+	{MaxIncome: floatPtr(2000001), TaxRate: 0.35, Description: "2,000,001 ขึ้นไป"},
 }
 
 func floatPtr(f float64) *float64 {
@@ -43,10 +43,14 @@ func calculateTax(income float64) float64 {
 	// Calculate taxable income after deduction
 	taxableIncome := income - taxReduction
 	for index, tax := range TaxLevel {
-		if index < 1 || index > len(TaxLevel) {
+		if index > len(TaxLevel) {
 			continue
 		}
-		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[index-1].MaxIncome)
+		adjustindex := index - 1
+		if adjustindex < 0 {
+			adjustindex = 0
+		}
+		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome)
 	}
 
 	return taxAmount
