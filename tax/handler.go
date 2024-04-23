@@ -74,6 +74,7 @@ func calculateTax(income float64) float64 {
 
 	return taxAmount
 }
+
 func (h *Handler) taxReduction() {
 	discount, err := h.store.Discounts()
 	if err != nil {
