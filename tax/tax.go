@@ -48,12 +48,12 @@ func (income IncomeDetails) CalculateTaxDiscount(dic TaxDiscountType) float64 {
 	return income.TotalIncome - dic.PersonalDeduction.Discount_value - totalDiscount
 }
 
-func (income IncomeDetails) CalculateTax(dic TaxDiscountType) float64 {
+func (income IncomeDetails) CalculateTax(dic TaxDiscountType) TaxResponse {
 	taxableIncome := income.CalculateTaxDiscount(dic)
 	var taxAmount float64
-	taxLevelindex := 0
+	// taxLevelindex := 0
 	maxIncomLevel := *TaxLevel[len(TaxLevel)-1].MaxIncome
-
+	var taxLevelRespose = []TaxLevelRespose{}
 	for index, tax := range TaxLevel {
 
 		if index > len(TaxLevel) {
@@ -63,14 +63,24 @@ func (income IncomeDetails) CalculateTax(dic TaxDiscountType) float64 {
 		if adjustindex < 0 {
 			adjustindex = 0
 		}
-		if taxableIncome < *TaxLevel[adjustindex].MaxIncome {
-			continue
+		// if taxableIncome < *TaxLevel[adjustindex].MaxIncome {
+		// 	continue
+		// }
+		// taxLevelindex += 1
+		// taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel)
+		tlr := TaxLevelRespose{
+			Level:      TaxLevel[index].Description,
+			TaxinLevel: tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel),
 		}
-		taxLevelindex += 1
-		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel)
+		taxAmount += tlr.TaxinLevel
+		taxLevelRespose = append(taxLevelRespose, tlr)
+	}
+	var taxResponse = TaxResponse{
+		Tax:   taxAmount - income.WHT,
+		Level: taxLevelRespose,
 	}
 
-	return taxAmount - income.WHT
+	return taxResponse
 }
 
 type TaxChart struct {

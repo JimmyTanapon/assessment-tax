@@ -19,12 +19,12 @@ type Err struct {
 	Message string `json:"message"`
 }
 type TaxResponse struct {
-	Tax      float64 `json:"tax"`
-	TaxLevel []TaxLevelRespose
+	Tax   float64           `json:"tax"`
+	Level []TaxLevelRespose `json:"taxLevel"`
 }
 type TaxLevelRespose struct {
-	Level      string
-	TaxinLevel float64
+	Level      string  `json:"level"`
+	TaxinLevel float64 `json:"tax"`
 }
 type Storer interface {
 	Discounts() (TaxDiscountType, error)
@@ -56,10 +56,9 @@ func (h *Handler) TaxHandler(c echo.Context) error {
 	if !v.Valitation {
 		return c.JSON(http.StatusBadRequest, v.Message)
 	}
-	// incomeDetails.CalculateTaxDiscount(discount)
 
 	taxAmount := incomeDetails.CalculateTax(discount)
 	// return c.JSON(http.StatusOK, TaxResponse{Tax: taxAmount})
-	return helper.SuccessHandler(c, TaxResponse{Tax: taxAmount})
+	return helper.SuccessHandler(c, taxAmount)
 
 }
