@@ -13,11 +13,7 @@ type TaxDiscount struct {
 	Max_discount_value float64   `json:"max_discount_value"`
 	CreatedAt          time.Time `json:"created_at"`
 }
-type TaxDiscountType struct {
-	PersonalDeduction TaxDiscount
-	Donation          TaxDiscount
-	Kreceipt          TaxDiscount
-}
+
 type Allowance struct {
 	AllowanceType string  `json:"allowanceType"`
 	Amount        float64 `json:"amount"`
@@ -29,37 +25,31 @@ type IncomeDetails struct {
 	Allowances  []Allowance `json:"allowances"`
 }
 
-func (h *Handler) taxReduction() TaxDiscountType {
+func (h *Handler) getTaxReduction() TaxDiscountType {
 	discounts, err := h.store.Discounts()
-	var personalDeduction, donation, kreceipt TaxDiscount
 
 	if err != nil {
 		log.Fatal("err!", err)
 	}
-	for _, discount := range discounts {
-		switch discount.Discount_Type {
-		case "personalDeduction":
-			personalDeduction = discount
-		case "donation":
-			donation = discount
-		case "k-receipt":
-			kreceipt = discount
-		default:
-			log.Fatal("err!", discount)
+
+	return discounts
+}
+func (income IncomeDetails) CalculateTaxDiscount(dic TaxDiscountType) float64 {
+	var totalDiscount float64
+	for _, discount := range income.Allowances {
+		if discount.AllowanceType == dic.Donation.Discount_Type {
+			if discount.Amount > dic.Donation.Max_discount_value {
+				totalDiscount += dic.Donation.Max_discount_value
+			} else {
+				totalDiscount += discount.Amount
+			}
 		}
 	}
-	var typeofTaxDicounst = TaxDiscountType{
-		PersonalDeduction: personalDeduction,
-		Donation:          donation,
-		Kreceipt:          kreceipt,
-	}
-
-	return typeofTaxDicounst
+	return income.TotalIncome - dic.PersonalDeduction.Discount_value - totalDiscount
 }
 
-func (h *Handler) CalculateTax(income IncomeDetails) float64 {
-	taxType := h.taxReduction()
-	taxableIncome := income.TotalIncome - taxType.PersonalDeduction.Discount_value
+func (income IncomeDetails) CalculateTax(dic TaxDiscountType) float64 {
+	taxableIncome := income.CalculateTaxDiscount(dic)
 	var taxAmount float64
 	taxLevelindex := 0
 	maxIncomLevel := *TaxLevel[len(TaxLevel)-1].MaxIncome
@@ -79,19 +69,18 @@ func (h *Handler) CalculateTax(income IncomeDetails) float64 {
 		taxLevelindex += 1
 		taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel)
 	}
-	log.Println("taxlevle", taxLevelindex)
 
 	return taxAmount - income.WHT
 }
 
-type TaxBracket struct {
+type TaxChart struct {
 	MinIncome   float64  `json:"min_income"`
 	MaxIncome   *float64 `json:"max_income,omitempty"`
 	TaxRate     float64  `json:"tax_rate"`
 	Description string   `json:"description"`
 }
 
-func (tb TaxBracket) CalculateTaxRate(income float64, prvlevel float64, maxlevel float64) float64 {
+func (tb TaxChart) CalculateTaxRate(income float64, prvlevel float64, maxlevel float64) float64 {
 
 	if income <= prvlevel || tb.MaxIncome == nil {
 		return 0

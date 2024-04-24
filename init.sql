@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS tax_discount(
 INSERT INTO tax_discount(discount_type, discount_value, min_discount_value, max_discount_value) VALUES
 ('donation', 60000.00, 10000.00, 100000.00),
 ('personalDeduction', 100000.00, 0.00, 100000.00),
-('k-receipt', 50000.00, 1.00, 100000.00);
+('k-receipt', 50000.00, 0.00, 100000.00);
