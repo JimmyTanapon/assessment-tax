@@ -7,6 +7,7 @@ import (
 
 type TaxDiscount struct {
 	ID                 int       `json:"id"`
+	Name               string    `json:"name"`
 	Discount_Type      string    `json:"discount_type"`
 	Discount_value     float64   `json:"discount_value"`
 	Min_discount_value float64   `json:"min_discount_value"`
@@ -45,7 +46,7 @@ func (income IncomeDetails) CalculateTaxDiscount(dic TaxDiscountType) float64 {
 			}
 		}
 	}
-	return income.TotalIncome - dic.PersonalDeduction.Discount_value - totalDiscount
+	return income.TotalIncome - dic.Personal.Discount_value - totalDiscount
 }
 
 func (income IncomeDetails) CalculateTax(dic TaxDiscountType) TaxResponse {
