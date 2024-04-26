@@ -71,7 +71,6 @@ func (h *Handler) TaxHandler(c echo.Context) error {
 	}
 
 	taxAmount := incomeDetails.CalculateTax(discount)
-	// return c.JSON(http.StatusOK, TaxResponse{Tax: taxAmount})
 	return helper.SuccessHandler(c, taxAmount)
 
 }
