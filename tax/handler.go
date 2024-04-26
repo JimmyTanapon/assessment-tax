@@ -11,9 +11,9 @@ type Handler struct {
 	store Storer
 }
 type TaxDiscountType struct {
-	PersonalDeduction TaxDiscount
-	Donation          TaxDiscount
-	Kreceipt          TaxDiscount
+	Personal TaxDiscount
+	Donation TaxDiscount
+	Kreceipt TaxDiscount
 }
 type Err struct {
 	Message string `json:"message"`
@@ -28,6 +28,19 @@ type TaxLevelRespose struct {
 }
 type Storer interface {
 	Discounts() (TaxDiscountType, error)
+	SettingDeductionWithType(t string, amount float64) (UpdateDeductionResponse, error)
+}
+type UpdateDeductionResponse struct {
+	Type   string
+	Amount float64
+}
+
+type Amount struct {
+	Amount float64
+}
+type TResponse struct {
+	Type   string
+	Amount float64
 }
 
 func New(db Storer) *Handler {
@@ -60,5 +73,31 @@ func (h *Handler) TaxHandler(c echo.Context) error {
 	taxAmount := incomeDetails.CalculateTax(discount)
 	// return c.JSON(http.StatusOK, TaxResponse{Tax: taxAmount})
 	return helper.SuccessHandler(c, taxAmount)
+
+}
+
+func (h *Handler) UpDeductionHandler(c echo.Context) error {
+
+	ductionType := c.Param("type")
+	var amount Amount
+	var response UpdateDeductionResponse
+	if err := c.Bind(&amount); err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+	discount := h.getTaxReduction()
+	v := valitationSetingInpunt(amount, ductionType, discount)
+
+	if !v.Valitation {
+		return c.JSON(http.StatusBadRequest, v.Message)
+	}
+
+	response, err := h.store.SettingDeductionWithType(ductionType, amount.Amount)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	return helper.SuccessHandler(c, map[string]interface{}{
+		response.Type: response.Amount,
+	}, 200)
 
 }

@@ -9,6 +9,7 @@ import (
 
 type TaxDiscount struct {
 	ID                 int       `postgres:"id"`
+	Name               string    `postgres:"name"`
 	Discount_Type      string    `postgres:"discount_type"`
 	Discount_value     float64   `postgres:"discount_value"`
 	Min_discount_value float64   `postgres:"min_discount_value"`
@@ -16,9 +17,13 @@ type TaxDiscount struct {
 	CreatedAt          time.Time `postgres:"created_at"`
 }
 type TaxDiscountType struct {
-	PersonalDeduction TaxDiscount
-	Donation          TaxDiscount
-	Kreceipt          TaxDiscount
+	Personal TaxDiscount
+	Donation TaxDiscount
+	Kreceipt TaxDiscount
+}
+type UpdateDeductionResponse struct {
+	Type   string
+	Amount float64
 }
 
 func (p *Postgres) Discounts() (tax.TaxDiscountType, error) {
@@ -31,7 +36,9 @@ func (p *Postgres) Discounts() (tax.TaxDiscountType, error) {
 	for rows.Next() {
 		var td TaxDiscount
 		err := rows.Scan(
-			&td.ID, &td.Discount_Type,
+
+			&td.ID, &td.Name,
+			&td.Discount_Type,
 			&td.Discount_value,
 			&td.Min_discount_value,
 			&td.Max_discount_value,
@@ -42,6 +49,7 @@ func (p *Postgres) Discounts() (tax.TaxDiscountType, error) {
 		}
 		taxDiscount = append(taxDiscount, tax.TaxDiscount{
 			ID:                 td.ID,
+			Name:               td.Name,
 			Discount_Type:      td.Discount_Type,
 			Discount_value:     td.Discount_value,
 			Min_discount_value: td.Min_discount_value,
@@ -62,7 +70,7 @@ func CreateTaxGroup(taxDiscount []tax.TaxDiscount) (tax.TaxDiscountType, error) 
 
 	for _, discount := range taxDiscount {
 		switch discount.Discount_Type {
-		case "personalDeduction":
+		case "personal":
 			personalDeduction = discount
 		case "donation":
 			donation = discount
@@ -73,10 +81,29 @@ func CreateTaxGroup(taxDiscount []tax.TaxDiscount) (tax.TaxDiscountType, error) 
 		}
 	}
 	var typeofTaxDicounst = tax.TaxDiscountType{
-		PersonalDeduction: personalDeduction,
-		Donation:          donation,
-		Kreceipt:          kreceipt,
+		Personal: personalDeduction,
+		Donation: donation,
+		Kreceipt: kreceipt,
 	}
 
 	return typeofTaxDicounst, nil
+}
+
+func (p *Postgres) SettingDeductionWithType(t string, amount float64) (tax.UpdateDeductionResponse, error) {
+	query := `
+        UPDATE public.tax_discount 
+        SET discount_value = $1 
+        WHERE discount_type = $2 
+            AND $1 > min_discount_value 
+            AND $1 < max_discount_value
+        RETURNING discount_name, discount_value `
+
+	var updateDeductionResponse tax.UpdateDeductionResponse
+
+	err := p.Db.QueryRow(query, amount, t).Scan(&updateDeductionResponse.Type, &updateDeductionResponse.Amount)
+	if err != nil {
+		return updateDeductionResponse, err
+	}
+
+	return updateDeductionResponse, nil
 }
