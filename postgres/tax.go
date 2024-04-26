@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/JimmyTanapon/assessment-tax/tax"
@@ -21,6 +20,10 @@ type TaxDiscountType struct {
 	Personal TaxDiscount
 	Donation TaxDiscount
 	Kreceipt TaxDiscount
+}
+type UpdateDeductionResponse struct {
+	Type   string
+	Amount float64
 }
 
 func (p *Postgres) Discounts() (tax.TaxDiscountType, error) {
@@ -86,7 +89,7 @@ func CreateTaxGroup(taxDiscount []tax.TaxDiscount) (tax.TaxDiscountType, error) 
 	return typeofTaxDicounst, nil
 }
 
-func (p *Postgres) SettingDeductionWithType(t string, amount float64) (string, float64, error) {
+func (p *Postgres) SettingDeductionWithType(t string, amount float64) (tax.UpdateDeductionResponse, error) {
 	query := `
         UPDATE public.tax_discount 
         SET discount_value = $1 
@@ -95,13 +98,12 @@ func (p *Postgres) SettingDeductionWithType(t string, amount float64) (string, f
             AND $1 < max_discount_value
         RETURNING discount_name, discount_value `
 
-	var updatedDiscountName string
-	var updatedDiscountValue float64
-	err := p.Db.QueryRow(query, amount, t).Scan(&updatedDiscountName, &updatedDiscountValue)
+	var updateDeductionResponse tax.UpdateDeductionResponse
+
+	err := p.Db.QueryRow(query, amount, t).Scan(&updateDeductionResponse.Type, &updateDeductionResponse.Amount)
 	if err != nil {
-		return "", 0, err
+		return updateDeductionResponse, err
 	}
 
-	log.Println(updatedDiscountName, updatedDiscountValue)
-	return updatedDiscountName, updatedDiscountValue, nil
+	return updateDeductionResponse, nil
 }

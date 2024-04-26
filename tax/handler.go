@@ -28,8 +28,13 @@ type TaxLevelRespose struct {
 }
 type Storer interface {
 	Discounts() (TaxDiscountType, error)
-	SettingDeductionWithType(t string, amount float64) (string, float64, error)
+	SettingDeductionWithType(t string, amount float64) (UpdateDeductionResponse, error)
 }
+type UpdateDeductionResponse struct {
+	Type   string
+	Amount float64
+}
+
 type Amount struct {
 	Amount float64
 }
@@ -74,29 +79,25 @@ func (h *Handler) TaxHandler(c echo.Context) error {
 func (h *Handler) UpDeductionHandler(c echo.Context) error {
 
 	ductionType := c.Param("type")
-
 	var amount Amount
-	var a float64
-	var s string
+	var response UpdateDeductionResponse
 	if err := c.Bind(&amount); err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 	discount := h.getTaxReduction()
 	v := valitationSetingInpunt(amount, ductionType, discount)
 
-	if v.Valitation {
+	if !v.Valitation {
 		return c.JSON(http.StatusBadRequest, v.Message)
 	}
 
-	s, a, err := h.store.SettingDeductionWithType(ductionType, amount.Amount)
+	response, err := h.store.SettingDeductionWithType(ductionType, amount.Amount)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
-	var response = TResponse{
-		Type:   s,
-		Amount: a,
-	}
 
-	return helper.SuccessHandler(c, response)
+	return helper.SuccessHandler(c, map[string]interface{}{
+		response.Type: response.Amount,
+	}, 200)
 
 }

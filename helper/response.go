@@ -12,7 +12,6 @@ type ErrorResponse struct {
 } // @name ErrorResponse
 
 type SuccessResponse struct {
-	Status string      `json:"status"`
 	Result interface{} `json:"result"`
 } // @name SuccessResponse
 
@@ -22,11 +21,10 @@ func SuccessHandler(c echo.Context, result interface{}, statusCode ...int) error
 		code = statusCode[0]
 	}
 
-	response := SuccessResponse{
-		Status: "SUCCESS",
-		Result: result,
-	}
-	return c.JSON(code, response)
+	// response := SuccessResponse{
+	// 	Result: result,
+	// }
+	return c.JSON(code, result)
 }
 
 func FailedHandler(c echo.Context, result interface{}, statusCode ...int) error {

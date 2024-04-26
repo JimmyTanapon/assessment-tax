@@ -43,6 +43,7 @@ func valitationInpunt(input IncomeDetails, v TaxDiscountType) InputErrorMeassage
 func valitationSetingInpunt(input Amount, tdt string, v TaxDiscountType) InputErrorMeassager {
 
 	var message InputErrorMeassager
+	message.Valitation = true
 	if tdt == "" {
 		message.Message = "ใส่ประเภทของ ส่วนลดหยอนด้วยครับ!"
 		message.Valitation = false
@@ -62,5 +63,5 @@ func valitationSetingInpunt(input Amount, tdt string, v TaxDiscountType) InputEr
 		return message
 	}
 
-	return InputErrorMeassager{Message: "", Valitation: true}
+	return message
 }
