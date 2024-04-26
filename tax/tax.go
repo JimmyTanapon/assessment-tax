@@ -2,6 +2,7 @@ package tax
 
 import (
 	"log"
+	"math"
 	"time"
 )
 
@@ -52,11 +53,10 @@ func (income IncomeDetails) CalculateTaxDiscount(dic TaxDiscountType) float64 {
 func (income IncomeDetails) CalculateTax(dic TaxDiscountType) TaxResponse {
 	taxableIncome := income.CalculateTaxDiscount(dic)
 	var taxAmount float64
-	// taxLevelindex := 0
 	maxIncomLevel := *TaxLevel[len(TaxLevel)-1].MaxIncome
 	var taxLevelRespose = []TaxLevelRespose{}
 	for index, tax := range TaxLevel {
-
+		log.Println("here", index)
 		if index > len(TaxLevel) {
 			continue
 		}
@@ -67,17 +67,18 @@ func (income IncomeDetails) CalculateTax(dic TaxDiscountType) TaxResponse {
 		// if taxableIncome < *TaxLevel[adjustindex].MaxIncome {
 		// 	continue
 		// }
-		// taxLevelindex += 1
-		// taxAmount += tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel)
+
 		tlr := TaxLevelRespose{
 			Level:      TaxLevel[index].Description,
 			TaxinLevel: tax.CalculateTaxRate(taxableIncome, *TaxLevel[adjustindex].MaxIncome, maxIncomLevel),
 		}
 		taxAmount += tlr.TaxinLevel
+		log.Println("Taxamount:", taxAmount)
 		taxLevelRespose = append(taxLevelRespose, tlr)
 	}
+
 	var taxResponse = TaxResponse{
-		Tax:   taxAmount - income.WHT,
+		Tax:   math.Round((taxAmount-income.WHT)*100) / 100,
 		Level: taxLevelRespose,
 	}
 
@@ -93,11 +94,13 @@ type TaxChart struct {
 
 func (tb TaxChart) CalculateTaxRate(income float64, prvlevel float64, maxlevel float64) float64 {
 
-	if income <= prvlevel || tb.MaxIncome == nil {
+	if income <= prvlevel {
 		return 0
 	}
-	if income > *tb.MaxIncome && income < maxlevel {
-		return (*tb.MaxIncome - prvlevel) * (tb.TaxRate)
+	if income > *tb.MaxIncome && *tb.MaxIncome < maxlevel {
+		return math.Round(((*tb.MaxIncome-prvlevel)*(tb.TaxRate))*100) / 100
 	}
-	return (income - prvlevel) * (tb.TaxRate)
+
+	return math.Round(((income-prvlevel)*(tb.TaxRate))*100) / 100
+
 }
