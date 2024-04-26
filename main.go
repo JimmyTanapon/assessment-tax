@@ -37,7 +37,7 @@ func main() {
 	e := echo.New()
 	handler := tax.New(p)
 	e.POST("/tax/calculations", handler.TaxHandler)
-
+	e.POST("tax/calculations/upload-csv", handler.TaxCSVUploadHandler)
 	e.POST("/admin/deductions/:type", handler.UpDeductionHandler, middleware.BasicAuth(AuthMiddleware))
 
 	e.Logger.Fatal(e.Start(":" + os.Getenv("PORT")))
