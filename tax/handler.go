@@ -1,7 +1,9 @@
 package tax
 
 import (
+	"encoding/csv"
 	"net/http"
+	"strconv"
 
 	"github.com/JimmyTanapon/assessment-tax/helper"
 	"github.com/labstack/echo/v4"
@@ -17,6 +19,10 @@ type TaxDiscountType struct {
 }
 type Err struct {
 	Message string `json:"message"`
+}
+type TaxResponseWithRefund struct {
+	TaxRefund   float64 `json:"taxRefund"`
+	TaxResponse TaxResponse
 }
 type TaxResponse struct {
 	Tax   float64           `json:"tax"`
@@ -71,6 +77,17 @@ func (h *Handler) TaxHandler(c echo.Context) error {
 	}
 
 	taxAmount := incomeDetails.CalculateTax(discount)
+	if taxAmount.Tax < 0 {
+		response := TaxResponseWithRefund{
+			TaxRefund:   (-1 * taxAmount.Tax),
+			TaxResponse: taxAmount,
+		}
+		// response := map[string]interface{}{
+		// 	"taxRefund": (-1 * taxAmount.Tax) ,
+		// 	"taxAmount": taxAmount,
+		// }
+		return helper.SuccessHandler(c, response)
+	}
 	return helper.SuccessHandler(c, taxAmount)
 
 }
@@ -98,5 +115,52 @@ func (h *Handler) UpDeductionHandler(c echo.Context) error {
 	return helper.SuccessHandler(c, map[string]interface{}{
 		response.Type: response.Amount,
 	}, 200)
+
+}
+func (h *Handler) TaxCSVUploadHandler(c echo.Context) error {
+	file, err := c.FormFile("taxFile")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "Failed to retrieve the CSV file",
+		})
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	reader := csv.NewReader(src)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "Failed to read the CSV file",
+		})
+	}
+	v := valitationCsvFile(records)
+	if !v.Valitation {
+		return c.JSON(http.StatusBadRequest, v.Message)
+	}
+	var incomeDetails []IncomeDetails
+	for _, record := range records[1:] {
+		totalIncome, _ := strconv.ParseFloat(record[0], 64)
+		wht, _ := strconv.ParseFloat(record[1], 64)
+		donation, _ := strconv.ParseFloat(record[2], 64)
+
+		income := IncomeDetails{
+			TotalIncome: totalIncome,
+			WHT:         wht,
+			Allowances: []Allowance{
+				Allowance{
+					AllowanceType: "donation",
+					Amount:        donation,
+				},
+			},
+		}
+		incomeDetails = append(incomeDetails, income)
+	}
+	discount := h.getTaxReduction()
+	result := CalculateTaxCsv(incomeDetails, discount)
+
+	return c.JSON(http.StatusOK, result)
 
 }

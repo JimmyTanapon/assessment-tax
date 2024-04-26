@@ -1,5 +1,9 @@
 package tax
 
+import (
+	"strconv"
+)
+
 type InputErrorMeassager struct {
 	Message    string
 	Valitation bool
@@ -61,6 +65,36 @@ func valitationSetingInpunt(input Amount, tdt string, v TaxDiscountType) InputEr
 
 		}
 		return message
+	}
+
+	return message
+}
+func valitationCsvFile(file [][]string) InputErrorMeassager {
+	var message InputErrorMeassager
+	message.Valitation = true
+
+	for i, h := range file[:1] {
+		if h[i] == "" {
+			message.Message = "head ไม่เท่ากันค่าว่าง เเละเรียงตามนี้เสมอ  totalIncome,wht,donation "
+			message.Valitation = false
+			return message
+		}
+		if h[0] != "totalIncome" || h[1] != "wht" || h[2] != "donation" {
+			message.Message = "ตำเเหน่งของ head ต้องเรียงตามนี้ totalIncome,wht,donation"
+			message.Valitation = false
+			return message
+		}
+	}
+	for _, r := range file[1:] {
+		t, _ := strconv.ParseFloat(r[0], 64)
+		w, _ := strconv.ParseFloat(r[1], 64)
+		d, _ := strconv.ParseFloat(r[2], 64)
+		if t < 0 && w < 0 && d < 0 {
+			message.Message = "ค่า Totalincome, wht, donation ต้องมากกว่า 0 เเละต้องไม่เป็นค่าว่าง หรือ ตัวหนังสือ"
+			message.Valitation = false
+			return message
+		}
+
 	}
 
 	return message
