@@ -40,13 +40,23 @@ func (income IncomeDetails) CalculateTaxDiscount(dic TaxDiscountType) float64 {
 	var totalDiscount float64
 	for _, discount := range income.Allowances {
 		if discount.AllowanceType == dic.Donation.Discount_Type {
-			if discount.Amount > dic.Donation.Max_discount_value {
-				totalDiscount += dic.Donation.Max_discount_value
+			if discount.Amount > dic.Donation.Discount_value {
+				totalDiscount += dic.Donation.Discount_value
 			} else {
 				totalDiscount += discount.Amount
 			}
+
+		}
+		if discount.AllowanceType == dic.Kreceipt.Discount_Type {
+			if discount.Amount > dic.Kreceipt.Discount_value {
+				totalDiscount += dic.Kreceipt.Discount_value
+			} else {
+				totalDiscount += discount.Amount
+			}
+
 		}
 	}
+	log.Println(totalDiscount)
 	return income.TotalIncome - dic.Personal.Discount_value - totalDiscount
 }
 
