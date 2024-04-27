@@ -16,6 +16,11 @@ func valitationInpunt(input IncomeDetails, v TaxDiscountType) InputErrorMeassage
 		message.Valitation = false
 		return message
 	}
+	if input.WHT > input.TotalIncome {
+		message.Message = "ข้อมูล wht ที่จะถูกส่งเข้ามาคำนวน ไม่สามารถมีค่าน้อยกว่า 0 หรือมากกว่ารายรับได้"
+		message.Valitation = false
+		return message
+	}
 
 	for _, i := range input.Allowances {
 		if i.AllowanceType == v.Donation.Discount_Type {

@@ -56,13 +56,13 @@ func (income IncomeDetails) CalculateTaxDiscount(dic TaxDiscountType) float64 {
 
 		}
 	}
-	log.Println(totalDiscount)
 	return income.TotalIncome - dic.Personal.Discount_value - totalDiscount
 }
 
 func (income IncomeDetails) CalculateTax(dic TaxDiscountType) TaxResponse {
 	taxableIncome := income.CalculateTaxDiscount(dic)
 	var taxAmount float64
+	taxRefund := 0.00
 	maxIncomLevel := *TaxLevel[len(TaxLevel)-1].MaxIncome
 	var taxLevelRespose = []TaxLevelRespose{}
 	for index, tax := range TaxLevel {
@@ -73,9 +73,6 @@ func (income IncomeDetails) CalculateTax(dic TaxDiscountType) TaxResponse {
 		if adjustindex < 0 {
 			adjustindex = 0
 		}
-		// if taxableIncome < *TaxLevel[adjustindex].MaxIncome {
-		// 	continue
-		// }
 
 		tlr := TaxLevelRespose{
 			Level:      TaxLevel[index].Description,
@@ -84,10 +81,15 @@ func (income IncomeDetails) CalculateTax(dic TaxDiscountType) TaxResponse {
 		taxAmount += tlr.TaxinLevel
 		taxLevelRespose = append(taxLevelRespose, tlr)
 	}
+	result := math.Round((taxAmount-income.WHT)*100) / 100
+	if result < 0 {
+		taxRefund = -1 * result
+	}
 
 	var taxResponse = TaxResponse{
-		Tax:   math.Round((taxAmount-income.WHT)*100) / 100,
-		Level: taxLevelRespose,
+		Tax:       result,
+		Level:     taxLevelRespose,
+		TaxRefund: taxRefund,
 	}
 
 	return taxResponse
@@ -116,11 +118,8 @@ func (tb TaxChart) CalculateTaxRate(income float64, prvlevel float64, maxlevel f
 type Taxes struct {
 	TotalIncome float64
 	Tax         float64
+	TaxRefund   float64
 }
-
-// type TaxRefund struct {
-// 	taxRefund float32
-// }
 
 func CalculateTaxCsv(taxesCsv []IncomeDetails, dic TaxDiscountType) []Taxes {
 	var taxes []Taxes
@@ -131,6 +130,7 @@ func CalculateTaxCsv(taxesCsv []IncomeDetails, dic TaxDiscountType) []Taxes {
 		tax := Taxes{
 			TotalIncome: tax.TotalIncome,
 			Tax:         amount.Tax,
+			TaxRefund:   amount.TaxRefund,
 		}
 
 		taxes = append(taxes, tax)

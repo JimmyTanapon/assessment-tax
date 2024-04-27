@@ -25,8 +25,9 @@ type TaxResponseWithRefund struct {
 	TaxResponse TaxResponse
 }
 type TaxResponse struct {
-	Tax   float64           `json:"tax"`
-	Level []TaxLevelRespose `json:"taxLevel"`
+	Tax       float64           `json:"tax"`
+	TaxRefund float64           `json:"taxRefund"`
+	Level     []TaxLevelRespose `json:"taxLevel"`
 }
 type TaxLevelRespose struct {
 	Level      string  `json:"level"`
@@ -77,17 +78,7 @@ func (h *Handler) TaxHandler(c echo.Context) error {
 	}
 
 	taxAmount := incomeDetails.CalculateTax(discount)
-	if taxAmount.Tax < 0 {
-		response := TaxResponseWithRefund{
-			TaxRefund:   (-1 * taxAmount.Tax),
-			TaxResponse: taxAmount,
-		}
-		// response := map[string]interface{}{
-		// 	"taxRefund": (-1 * taxAmount.Tax) ,
-		// 	"taxAmount": taxAmount,
-		// }
-		return helper.SuccessHandler(c, response)
-	}
+
 	return helper.SuccessHandler(c, taxAmount)
 
 }
