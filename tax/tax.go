@@ -117,9 +117,10 @@ type Taxes struct {
 	TotalIncome float64
 	Tax         float64
 }
-type TaxRefund struct {
-	taxRefund float32
-}
+
+// type TaxRefund struct {
+// 	taxRefund float32
+// }
 
 func CalculateTaxCsv(taxesCsv []IncomeDetails, dic TaxDiscountType) []Taxes {
 	var taxes []Taxes

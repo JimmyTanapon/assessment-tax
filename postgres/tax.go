@@ -95,7 +95,7 @@ func (p *Postgres) SettingDeductionWithType(t string, amount float64) (tax.Updat
         SET discount_value = $1 
         WHERE discount_type = $2 
             AND $1 > min_discount_value 
-            AND $1 < max_discount_value
+            AND $1 <= max_discount_value
         RETURNING discount_name, discount_value `
 
 	var updateDeductionResponse tax.UpdateDeductionResponse
