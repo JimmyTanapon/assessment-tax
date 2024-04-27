@@ -25,7 +25,8 @@ func valitationInpunt(input IncomeDetails, v TaxDiscountType) InputErrorMeassage
 	for _, i := range input.Allowances {
 		if i.AllowanceType == v.Donation.Discount_Type {
 			if i.Amount >= 0.0 {
-				return InputErrorMeassager{Message: "", Valitation: true}
+				message.Message = ""
+				message.Valitation = true
 			} else {
 				message.Message = "Amount is below minimum for Donation"
 				message.Valitation = false
@@ -33,7 +34,8 @@ func valitationInpunt(input IncomeDetails, v TaxDiscountType) InputErrorMeassage
 			}
 		} else if i.AllowanceType == v.Kreceipt.Discount_Type {
 			if i.Amount >= 0.0 {
-				return InputErrorMeassager{Message: "", Valitation: true}
+				message.Message = ""
+				message.Valitation = true
 			} else {
 				message.Message = "Amount is below minimum for K-receipt"
 				message.Valitation = false
@@ -52,14 +54,14 @@ func valitationSetingInpunt(input Amount, tdt string, v TaxDiscountType) InputEr
 	var message InputErrorMeassager
 	message.Valitation = true
 	if tdt != v.Personal.Discount_Type && tdt != v.Kreceipt.Discount_Type {
-		message.Message = "ใส่ประเภทของ ส่วนลดหยอนด้วยครับ!"
+		message.Message = "ระบุประเภทของส่วนลดหย่อนไม่ถูกต้อง!"
 		message.Valitation = false
 		return message
 	}
 
 	if tdt == v.Personal.Discount_Type {
 		if input.Amount <= v.Personal.Min_discount_value {
-			message.Message = "input Personal ที่ใส่มา ต้องมากกว่า  " + strconv.Itoa(int(v.Personal.Min_discount_value))
+			message.Message = "input Personal ที่ใส่มา ต้องมากกว่า" + strconv.Itoa(int(v.Personal.Min_discount_value))
 			message.Valitation = false
 
 		}
@@ -72,12 +74,12 @@ func valitationSetingInpunt(input Amount, tdt string, v TaxDiscountType) InputEr
 	}
 	if tdt == v.Kreceipt.Discount_Type {
 		if input.Amount <= v.Kreceipt.Min_discount_value {
-			message.Message = "input Kreceipt  ที่ใส่มา ต้องมากกว่า " + strconv.Itoa(int(v.Kreceipt.Min_discount_value))
+			message.Message = "input Kreceipt  ที่ใส่มา ต้องมากกว่า" + strconv.Itoa(int(v.Kreceipt.Min_discount_value))
 			message.Valitation = false
 
 		}
 		if input.Amount > v.Kreceipt.Max_discount_value {
-			message.Message = "input Kreceipt ที่ใส่มาต้องน้อยกว่า " + strconv.Itoa(int(v.Kreceipt.Max_discount_value))
+			message.Message = "input Kreceipt ที่ใส่มาต้องน้อยกว่า" + strconv.Itoa(int(v.Kreceipt.Max_discount_value))
 			message.Valitation = false
 
 		}
@@ -86,7 +88,7 @@ func valitationSetingInpunt(input Amount, tdt string, v TaxDiscountType) InputEr
 
 	return message
 }
-func valitationCsvFile(file [][]string) InputErrorMeassager {
+func validationCsvFile(file [][]string) InputErrorMeassager {
 	var message InputErrorMeassager
 	message.Valitation = true
 

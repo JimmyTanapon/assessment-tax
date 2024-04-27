@@ -127,7 +127,7 @@ func (h *Handler) TaxCSVUploadHandler(c echo.Context) error {
 			"error": "Failed to read the CSV file",
 		})
 	}
-	v := valitationCsvFile(records)
+	v := validationCsvFile(records)
 	if !v.Valitation {
 		return c.JSON(http.StatusBadRequest, v.Message)
 	}
